@@ -74,24 +74,25 @@ class Game:
 
     def DrawText(self):
         if self.screen == 0: # Example start screen
-            window_w, window_h = 400, 200  # Set the window size
-            x_pos = (self.width - window_w) / 2
-            y_pos = (self.height - window_h) / 2
+            # window_w, window_h = 400, 200  # Set the window size
+            # x_pos = (self.width - window_w) / 2
+            # y_pos = (self.height - window_h) / 2
 
-            imgui.new_frame()
-            # Centered window
-            imgui.set_next_window_position(x_pos, y_pos)
-            imgui.set_next_window_size(window_w, window_h)
-            imgui.begin("Main Menu", False, imgui.WINDOW_NO_MOVE | imgui.WINDOW_NO_COLLAPSE | imgui.WINDOW_NO_RESIZE)
+            # imgui.new_frame()
+            # # Centered window
+            # imgui.set_next_window_position(x_pos, y_pos)
+            # imgui.set_next_window_size(window_w, window_h)
+            # imgui.begin("Main Menu", False, imgui.WINDOW_NO_MOVE | imgui.WINDOW_NO_COLLAPSE | imgui.WINDOW_NO_RESIZE)
 
-            # Center text horizontally
-            imgui.set_cursor_pos_x((window_w - imgui.calc_text_size("Press 1: New Game")[0]) / 2)
-            imgui.text("Press 1: New Game")
+            # # Center text horizontally
+            # imgui.set_cursor_pos_x((window_w - imgui.calc_text_size("Press 1: New Game")[0]) / 2)
+            # imgui.text("Press 1: New Game")
 
-            imgui.end()
+            # imgui.end()
 
-            imgui.render()
-            self.gui.render(imgui.get_draw_data())
+            # imgui.render()
+            # self.gui.render(imgui.get_draw_data())
+            pass
 
         if self.screen == 2: # YOU WON Screen
             pass
@@ -102,9 +103,9 @@ class Game:
     def UpdateScene(self, inputs, time):
         if self.screen == 0: # Example start screen
             print(f'screen: {self.screen}')
-            if inputs["1"]:
-                self.screen = 1
-                self.InitScene()
+            # if inputs["1"]:
+            #     self.screen = 1
+            #     self.InitScene()
         if self.screen == 2: # YOU WON
             pass
         if self.screen == 3: # GAME OVER
