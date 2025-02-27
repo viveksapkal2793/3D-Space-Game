@@ -24,7 +24,7 @@ def load_obj(filepath):
         for line in file:
             if line.startswith('v '):
                 parts = line.split()
-                vertices.append([float(parts[1]), float(parts[2]), float(parts[3])])
+                vertices.append([float(parts[1]), float(parts[2]), float(parts[3]), 1.0, 1.0, 1.0])  # Adding default white color
             elif line.startswith('f '):
                 parts = line.split()
                 face = [int(part.split('/')[0]) - 1 for part in parts[1:]]
@@ -105,4 +105,42 @@ spacestationProps = {
     'rotation': np.array([0.0, 0.0, 0.0], dtype=np.float32),
     'scale': np.array([1.0, 1.0, 1.0], dtype=np.float32),
     'colour': np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32)
+}
+
+
+# Define vertices and indices for a simple 3D cube
+cube_vertices = np.array([
+    #   x,   y,   z,    r,   g,   b
+    -1, -1, -1,   1.0, 0.0, 0.0,  # Red
+    -1, -1,  1,   0.0, 1.0, 0.0,  # Green
+    -1,  1, -1,   0.0, 0.0, 1.0,  # Blue
+    -1,  1,  1,   1.0, 1.0, 0.0,  # Yellow
+     1, -1, -1,   1.0, 0.0, 1.0,  # Magenta
+     1, -1,  1,   0.0, 1.0, 1.0,  # Cyan
+     1,  1, -1,   1.0, 1.0, 1.0,  # White
+     1,  1,  1,   0.0, 0.0, 0.0   # Black
+], dtype=np.float32)
+
+cube_indices = np.array([
+    0, 1, 3,  
+    0, 3, 2,  
+    4, 5, 7,  
+    4, 7, 6,  
+    0, 1, 5,  
+    0, 5, 4,  
+    2, 3, 7, 
+    2, 7, 6,  
+    0, 2, 6,  
+    0, 6, 4,  
+    1, 3, 7,  
+    1, 7, 5  
+], dtype=np.uint32)
+
+cube_props = {
+    'vertices': cube_vertices,
+    'indices': cube_indices,
+    'position': np.array([0.0, 0.0, 0.0], dtype=np.float32),
+    'rotation': np.array([0.0, 0.0, 0.0], dtype=np.float32),
+    'scale': np.array([1.0, 1.0, 1.0], dtype=np.float32),
+    'colour': np.array([1.0, 0.0, 0.0, 1.0], dtype=np.float32)  # Red color
 }

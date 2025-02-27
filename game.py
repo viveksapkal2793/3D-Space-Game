@@ -1,7 +1,7 @@
 import imgui
 import numpy as np
 from utils.graphics import Object, Camera, Shader
-from assets.objects.objects import transporterProps, pirateProps, planetProps, laserProps, spacestationProps
+from assets.objects.objects import transporterProps, pirateProps, planetProps, laserProps, spacestationProps, cube_props
 from assets.shaders.shaders import standard_shader
 
 class Game:
@@ -22,10 +22,11 @@ class Game:
                 'transporter': None,
                 'pirates': [],
                 'planets': [],
-                'spaceStations': []
+                'spaceStations': [],
+                'cube': None
             } # Can define keys as 'transporter', 'pirates', etc. Their values being Object() or list of Object()
             ############################################################################
-            # Define world boundaries
+            # Define world boundarie
             self.worldMin = np.array([-5000, -5000, -5000], dtype=np.float32)
             self.worldMax = np.array([5000, 5000, 5000], dtype=np.float32)
             ############################################################################
@@ -35,18 +36,19 @@ class Game:
             for _ in range(self.n_planets):
                 position = np.random.uniform(self.worldMin, self.worldMax)
                 new_planet = Object('planet', self.shaders[0], planetProps)
-                new_planet.position = position
+                new_planet.properties['position'] = position
                 self.gameState['planets'].append(new_planet)
 
                 new_spaceStation = Object('spaceStation', self.shaders[0], spacestationProps)
-                new_spaceStation.position = position
+                new_spaceStation.properties['position'] = position
                 self.gameState['spaceStations'].append(new_spaceStation)
             print("Planet and spacestation initialized")
             ############################################################################
             # Initialize transporter (Randomly choose start and end planet, and initialize transporter at start planet)
             start_planet = np.random.choice(self.gameState['planets'])
             self.gameState['transporter'] = Object('transporter', self.shaders[0], transporterProps)
-            self.gameState['transporter'].position = start_planet.position
+            # self.gameState['transporter'].properties['position'] = start_planet.properties['position']
+            self.gameState['transporter'].properties['position'] = np.array([0, 0, 0], dtype=np.float32)    
             print("Transporter initialized")
             ############################################################################
             # Initialize Pirates (Spawn at random locations within world bounds)
@@ -54,44 +56,29 @@ class Game:
             for _ in range(self.n_pirates):
                 position = np.random.uniform(self.worldMin, self.worldMax)
                 new_pirate = Object('pirate', self.shaders[0], pirateProps) 
-                new_pirate.position = position
+                new_pirate.properties['position'] = position
                 self.gameState['pirates'].append(new_pirate)
             print("Pirate initialized")
+
+            cube = Object('cube', self.shaders[0], cube_props)
+            self.gameState['cube'] = cube
             ############################################################################
             # Initialize minimap arrow (Need to write orthographic projection shader for it)
+            self.camera.position = np.array([5,5,5], dtype=np.float32)
+            self.camera.lookAt = np.array([-1,-1,-1], dtype=np.float32)
 
+            self.gameState['cube'].properties["scale"] = np.array([0.5, 0.5, 0.5], dtype=np.float32)
 
             ############################################################################
 
     def ProcessFrame(self, inputs, time):
-        # if self.screen == 0:
-        #     self.screen = 1
-        #     self.InitScene()
 
         self.UpdateScene(inputs, time)
         self.DrawScene()
         self.DrawText()
 
     def DrawText(self):
-        if self.screen == 0: # Example start screen
-            # window_w, window_h = 400, 200  # Set the window size
-            # x_pos = (self.width - window_w) / 2
-            # y_pos = (self.height - window_h) / 2
-
-            # imgui.new_frame()
-            # # Centered window
-            # imgui.set_next_window_position(x_pos, y_pos)
-            # imgui.set_next_window_size(window_w, window_h)
-            # imgui.begin("Main Menu", False, imgui.WINDOW_NO_MOVE | imgui.WINDOW_NO_COLLAPSE | imgui.WINDOW_NO_RESIZE)
-
-            # # Center text horizontally
-            # imgui.set_cursor_pos_x((window_w - imgui.calc_text_size("Press 1: New Game")[0]) / 2)
-            # imgui.text("Press 1: New Game")
-
-            # imgui.end()
-
-            # imgui.render()
-            # self.gui.render(imgui.get_draw_data())
+        if self.screen == 0:
             pass
 
         if self.screen == 2: # YOU WON Screen
@@ -102,17 +89,18 @@ class Game:
         
     def UpdateScene(self, inputs, time):
         if self.screen == 0: # Example start screen
-            print(f'screen: {self.screen}')
+            # print(f'screen: {self.screen}')
             # if inputs["1"]:
             #     self.screen = 1
             #     self.InitScene()
+            pass
         if self.screen == 2: # YOU WON
             pass
         if self.screen == 3: # GAME OVER
             pass
         
         if self.screen == 1: # Game screen
-            print(f'screen: {self.screen}')
+            # print(f'screen: {self.screen}')
             ############################################################################
             # Manage inputs 
            
@@ -149,9 +137,11 @@ class Game:
             # print("Drawing scene")
             ######################################################
             # Example draw statements
+
             
             for i, shader in enumerate(self.shaders):
                self.camera.Update(shader)
+            # self.gameState["cube"].Draw()
 
             self.gameState["transporter"].Draw()
             # print("Transporter drawn")
