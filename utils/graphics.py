@@ -31,9 +31,9 @@ class VAO:
         glBindVertexArray(self.vao)
         vbo.Use()
         glEnableVertexAttribArray(0)
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, ctypes.c_uint(6 * ctypes.sizeof(ctypes.c_float)), ctypes.c_void_p(0))
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * ctypes.sizeof(ctypes.c_float), ctypes.c_void_p(0))
         glEnableVertexAttribArray(1)
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, ctypes.c_uint(6 * ctypes.sizeof(ctypes.c_float)), ctypes.c_void_p(3 * ctypes.sizeof(ctypes.c_float)))
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * ctypes.sizeof(ctypes.c_float), ctypes.c_void_p(3 * ctypes.sizeof(ctypes.c_float)))
     def Use(self):
         glBindVertexArray(self.vao)
     def Delete(self):
@@ -71,13 +71,20 @@ class Camera:
                                     [0, 0, 1, -self.position[2]],
                                     [0, 0, 0, 1]], dtype = np.float32)
         
-        n = - self.lookAt / np.linalg.norm(self.lookAt)
-        
+        if np.linalg.norm(self.lookAt) != 0:
+            n = - self.lookAt / np.linalg.norm(self.lookAt)
+        else:
+            n = -self.lookAt
+    
         u = np.cross(self.up, n)
-        u = u / np.linalg.norm(u)
+
+        if np.linalg.norm(u) != 0:
+            u = u / np.linalg.norm(u)
 
         v = np.cross(n, u)
-        v = v / np.linalg.norm(v)
+
+        if np.linalg.norm(v) != 0:
+            v = v / np.linalg.norm(v)
 
         viewRotate = np.array([[u[0], u[1], u[2],0],
                             [v[0], v[1], v[2],0],
@@ -119,7 +126,7 @@ class Object:
 
         self.vbo = VBO(self.properties['vertices'])
         self.ibo = IBO(self.properties['indices'])
-        self.vao = VAO(self.vbo, self.vbl)
+        self.vao = VAO(self.vbo)
 
         self.properties.pop('vertices')
         self.properties.pop('indices')

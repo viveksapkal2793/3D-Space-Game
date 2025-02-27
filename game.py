@@ -1,6 +1,8 @@
 import imgui
 import numpy as np
 from utils.graphics import Object, Camera, Shader
+from assets.objects.objects import transporterProps, pirateProps, planetProps, laserProps, spacestationProps
+from assets.shaders.shaders import standard_shader
 
 class Game:
     def __init__(self, height, width, gui):
@@ -11,28 +13,50 @@ class Game:
 
     def InitScene(self):
         if self.screen == 1:
+            print("Initializing scene")
             ############################################################################
             # Define world state
             self.camera = Camera(self.height, self.width)
-            self.shaders = []
-            self.gameState = {} # Can define keys as 'transporter', 'pirates', etc. Their values being Object() or list of Object()
+            self.shaders = [Shader(standard_shader["vertex_shader"], standard_shader["fragment_shader"])]
+            self.gameState = {
+                'transporter': None,
+                'pirates': [],
+                'planets': [],
+                'spaceStations': []
+            } # Can define keys as 'transporter', 'pirates', etc. Their values being Object() or list of Object()
             ############################################################################
             # Define world boundaries
             self.worldMin = np.array([-5000, -5000, -5000], dtype=np.float32)
             self.worldMax = np.array([5000, 5000, 5000], dtype=np.float32)
             ############################################################################
             # Initialize Planets and space stations (Randomly place n planets and n spacestations within world bounds)
-            self.n_planets = 30 # for example
-            
+            self.n_planets = 30
+            self.n_spaceStations = 30
+            for _ in range(self.n_planets):
+                position = np.random.uniform(self.worldMin, self.worldMax)
+                new_planet = Object('planet', self.shaders[0], planetProps)
+                new_planet.position = position
+                self.gameState['planets'].append(new_planet)
+
+                new_spaceStation = Object('spaceStation', self.shaders[0], spacestationProps)
+                new_spaceStation.position = position
+                self.gameState['spaceStations'].append(new_spaceStation)
+            print("Planet and spacestation initialized")
             ############################################################################
             # Initialize transporter (Randomly choose start and end planet, and initialize transporter at start planet)
-
-
+            start_planet = np.random.choice(self.gameState['planets'])
+            self.gameState['transporter'] = Object('transporter', self.shaders[0], transporterProps)
+            self.gameState['transporter'].position = start_planet.position
+            print("Transporter initialized")
             ############################################################################
             # Initialize Pirates (Spawn at random locations within world bounds)
             self.n_pirates = 20 # for example
-    
-
+            for _ in range(self.n_pirates):
+                position = np.random.uniform(self.worldMin, self.worldMax)
+                new_pirate = Object('pirate', self.shaders[0], pirateProps) 
+                new_pirate.position = position
+                self.gameState['pirates'].append(new_pirate)
+            print("Pirate initialized")
             ############################################################################
             # Initialize minimap arrow (Need to write orthographic projection shader for it)
 
@@ -40,6 +64,10 @@ class Game:
             ############################################################################
 
     def ProcessFrame(self, inputs, time):
+        # if self.screen == 0:
+        #     self.screen = 1
+        #     self.InitScene()
+
         self.UpdateScene(inputs, time)
         self.DrawScene()
         self.DrawText()
@@ -73,6 +101,7 @@ class Game:
         
     def UpdateScene(self, inputs, time):
         if self.screen == 0: # Example start screen
+            print(f'screen: {self.screen}')
             if inputs["1"]:
                 self.screen = 1
                 self.InitScene()
@@ -82,6 +111,7 @@ class Game:
             pass
         
         if self.screen == 1: # Game screen
+            print(f'screen: {self.screen}')
             ############################################################################
             # Manage inputs 
            
@@ -115,13 +145,15 @@ class Game:
     
     def DrawScene(self):
         if self.screen == 1: 
+            # print("Drawing scene")
             ######################################################
             # Example draw statements
             
-            # for i, shader in enumerate(self.shaders):
-            #    self.camera.Update(shader)
+            for i, shader in enumerate(self.shaders):
+               self.camera.Update(shader)
 
-            # self.gameState["transporter"].Draw()
+            self.gameState["transporter"].Draw()
+            # print("Transporter drawn")
             # self.gameState["stars"].Draw()
             # self.gameState["arrow"].Draw()
 
@@ -130,12 +162,14 @@ class Game:
 
             # for laser in self.gameState["lasers"]:
             #     laser.Draw()
-            # for planet in self.gameState["planets"]:
-            #     planet.Draw()
-            # for spaceStation in self.gameState["spaceStations"]:
-            #     spaceStation.Draw()
-            # for pirate in self.gameState["pirates"]:
-            #     pirate.Draw()
+            for planet in self.gameState["planets"]:
+                planet.Draw()
+            # print("Planets drawn")
+            for spaceStation in self.gameState["spaceStations"]:
+                spaceStation.Draw()
+            # print("Spacestations drawn")
+            for pirate in self.gameState["pirates"]:
+                pirate.Draw()
+            # print("Pirates drawn")
             ######################################################
-            pass
 

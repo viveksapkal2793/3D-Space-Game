@@ -37,4 +37,70 @@ standard_shader = {
         '''
 
 }
+
+# standard_shader = {
+#     "vertex_shader" : '''
+        
+#         #version 330 core
+
+#         layout(location = 0) in vec3 aPos; // Position attribute
+#         layout(location = 1) in vec3 aNormal; // Normal attribute
+
+#         uniform mat4 modelMatrix;
+#         uniform mat4 viewMatrix;
+#         uniform mat4 projectionMatrix;
+
+#         out vec3 FragPos; // Position of the fragment in world space
+#         out vec3 Normal; // Normal of the fragment in world space
+
+#         void main()
+#         {
+#             FragPos = vec3(modelMatrix * vec4(aPos, 1.0));
+#             Normal = mat3(transpose(inverse(modelMatrix))) * aNormal; // Transform normal to world space
+
+#             gl_Position = projectionMatrix * viewMatrix * vec4(FragPos, 1.0);
+#         }
+
+#         ''',
+
+#         "fragment_shader" : '''
+
+#         #version 330 core
+
+#         in vec3 FragPos; // Position of the fragment in world space
+#         in vec3 Normal; // Normal of the fragment in world space
+
+#         uniform vec3 objectColour;
+#         uniform vec3 lightColour;
+#         uniform vec3 lightPos;
+#         uniform vec3 viewPos;
+
+#         out vec4 FragColor;
+
+#         void main()
+#         {
+#             // Ambient lighting
+#             float ambientStrength = 0.1;
+#             vec3 ambient = ambientStrength * lightColour;
+
+#             // Diffuse lighting
+#             vec3 norm = normalize(Normal);
+#             vec3 lightDir = normalize(lightPos - FragPos);
+#             float diff = max(dot(norm, lightDir), 0.0);
+#             vec3 diffuse = diff * lightColour;
+
+#             // Specular lighting
+#             float specularStrength = 0.5;
+#             vec3 viewDir = normalize(viewPos - FragPos);
+#             vec3 reflectDir = reflect(-lightDir, norm);
+#             float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+#             vec3 specular = specularStrength * spec * lightColour;
+
+#             vec3 result = (ambient + diffuse + specular) * objectColour;
+#             FragColor = vec4(result, 1.0);
+#         }
+
+#         '''
+
+# }
 ######################################################
