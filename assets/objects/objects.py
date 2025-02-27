@@ -17,14 +17,17 @@ from assets.shaders.shaders import standard_shader
 
 ###############################################################
 
-def load_obj(filepath):
+def load_obj(filepath, colors):
     vertices = []
     faces = []
+    color_index = 0
     with open(filepath, 'r') as file:
         for line in file:
             if line.startswith('v '):
                 parts = line.split()
-                vertices.append([float(parts[1]), float(parts[2]), float(parts[3]), 1.0, 1.0, 1.0])  # Adding default white color
+                color = colors[color_index % len(colors)]
+                vertices.append([float(parts[1]), float(parts[2]), float(parts[3]), color[0], color[1], color[2]])
+                color_index += 1
             elif line.startswith('f '):
                 parts = line.split()
                 face = [int(part.split('/')[0]) - 1 for part in parts[1:]]
@@ -56,11 +59,11 @@ def create_object(filepath, shader, objType='generic'):
 # laser = create_object('/home/vivek/CG/3D-Space-Game/assets/objects/models/laser.obj', shader, objType='laser')
 # spacestation = create_object('/home/vivek/CG/3D-Space-Game/assets/objects/models/spacestation.obj', shader, objType='spacestation')
 
-transporterVerts, transporterInds = load_obj('/home/vivek/CG/3D-Space-Game/assets/objects/models/transporter.obj')
-pirateVerts, pirateInds = load_obj('/home/vivek/CG/3D-Space-Game/assets/objects/models/pirate.obj')
-planetVerts, planetInds = load_obj('/home/vivek/CG/3D-Space-Game/assets/objects/models/planet.obj')
-laserVerts, laserInds = load_obj('/home/vivek/CG/3D-Space-Game/assets/objects/models/laser.obj')
-spacestationVerts, spacestationInds = load_obj('/home/vivek/CG/3D-Space-Game/assets/objects/models/spacestation.obj')
+transporterVerts, transporterInds = load_obj('/home/vivek/CG/3D-Space-Game/assets/objects/models/transporter.obj', colors=[[0, 0, 1], [0, 0, 0.5], [0, 0, 0.25]])
+pirateVerts, pirateInds = load_obj('/home/vivek/CG/3D-Space-Game/assets/objects/models/pirate.obj', colors=[[0, 1, 0], [0, 0.5, 0], [0, 0.25, 0]])
+planetVerts, planetInds = load_obj('/home/vivek/CG/3D-Space-Game/assets/objects/models/planet.obj', colors=[[0, 1, 1], [0, 0.5, 0.5], [0, 0.25, 0.25]])
+laserVerts, laserInds = load_obj('/home/vivek/CG/3D-Space-Game/assets/objects/models/laser.obj', colors=[[1, 0, 1], [0.5, 0, 0.5], [0.25, 0, 0.25]])
+spacestationVerts, spacestationInds = load_obj('/home/vivek/CG/3D-Space-Game/assets/objects/models/spacestation.obj', colors=[[1, 1, 0], [0.5, 0.5, 0], [0.25, 0.25, 0]])
 
 transporterProps = {
     'vertices': transporterVerts,
@@ -68,7 +71,7 @@ transporterProps = {
     'position': np.array([0.0, 0.0, 0.0], dtype=np.float32),
     'rotation': np.array([0.0, 0.0, 0.0], dtype=np.float32),
     'scale': np.array([1.0, 1.0, 1.0], dtype=np.float32),
-    'colour': np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32)
+    'colour': np.array([0.0, 0.0, 1.0, 1.0], dtype=np.float32)
 }
 
 pirateProps = {
@@ -77,7 +80,7 @@ pirateProps = {
     'position': np.array([0.0, 0.0, 0.0], dtype=np.float32),
     'rotation': np.array([0.0, 0.0, 0.0], dtype=np.float32),
     'scale': np.array([1.0, 1.0, 1.0], dtype=np.float32),
-    'colour': np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32)
+    'colour': np.array([0.0, 1.0, 0.0, 1.0], dtype=np.float32)
 }
 
 planetProps = {
@@ -86,7 +89,7 @@ planetProps = {
     'position': np.array([0.0, 0.0, 0.0], dtype=np.float32),
     'rotation': np.array([0.0, 0.0, 0.0], dtype=np.float32),
     'scale': np.array([1.0, 1.0, 1.0], dtype=np.float32),
-    'colour': np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32)
+    'colour': np.array([0.0, 1.0, 1.0, 1.0], dtype=np.float32)
 }
 
 laserProps = {
@@ -95,7 +98,7 @@ laserProps = {
     'position': np.array([0.0, 0.0, 0.0], dtype=np.float32),
     'rotation': np.array([0.0, 0.0, 0.0], dtype=np.float32),
     'scale': np.array([1.0, 1.0, 1.0], dtype=np.float32),
-    'colour': np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32)
+    'colour': np.array([1.0, 1.0, 0.0, 1.0], dtype=np.float32)
 }
 
 spacestationProps = {
@@ -104,7 +107,7 @@ spacestationProps = {
     'position': np.array([0.0, 0.0, 0.0], dtype=np.float32),
     'rotation': np.array([0.0, 0.0, 0.0], dtype=np.float32),
     'scale': np.array([1.0, 1.0, 1.0], dtype=np.float32),
-    'colour': np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32)
+    'colour': np.array([1.0, 0.0, 1.0, 1.0], dtype=np.float32)
 }
 
 

@@ -38,6 +38,36 @@ standard_shader = {
 
 }
 
+edge_shader = {
+    "vertex_shader" : '''
+        
+        #version 330 core
+        layout(location = 0) in vec3 vertexPosition;
+
+        uniform mat4 modelMatrix;
+        uniform mat4 viewMatrix;
+        uniform mat4 projectionMatrix;
+
+        void main() {
+            gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(vertexPosition, 1.0);
+        }
+
+        ''',
+
+        "fragment_shader" : '''
+
+        #version 330 core
+
+        out vec4 outputColour;
+
+        void main() {
+            outputColour = vec4(1.0, 1.0, 1.0, 1.0); // white color for edges
+        }
+
+        '''
+
+}
+
 # standard_shader = {
 #     "vertex_shader" : '''
         

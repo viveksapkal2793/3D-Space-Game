@@ -2,7 +2,7 @@ import imgui
 import numpy as np
 from utils.graphics import Object, Camera, Shader
 from assets.objects.objects import transporterProps, pirateProps, planetProps, laserProps, spacestationProps, cube_props
-from assets.shaders.shaders import standard_shader
+from assets.shaders.shaders import standard_shader, edge_shader
 
 class Game:
     def __init__(self, height, width, gui):
@@ -18,6 +18,7 @@ class Game:
             # Define world state
             self.camera = Camera(self.height, self.width)
             self.shaders = [Shader(standard_shader["vertex_shader"], standard_shader["fragment_shader"])]
+            self.edge_shader = Shader(edge_shader["vertex_shader"], edge_shader["fragment_shader"])
             self.gameState = {
                 'transporter': None,
                 'pirates': [],
@@ -31,8 +32,8 @@ class Game:
             self.worldMax = np.array([5000, 5000, 5000], dtype=np.float32)
             ############################################################################
             # Initialize Planets and space stations (Randomly place n planets and n spacestations within world bounds)
-            self.n_planets = 30
-            self.n_spaceStations = 30
+            self.n_planets = 20
+            self.n_spaceStations = 20
             for _ in range(self.n_planets):
                 position = np.random.uniform(self.worldMin, self.worldMax)
                 new_planet = Object('planet', self.shaders[0], planetProps)
@@ -40,16 +41,16 @@ class Game:
                 self.gameState['planets'].append(new_planet)
 
                 new_spaceStation = Object('spaceStation', self.shaders[0], spacestationProps)
-                new_spaceStation.properties['position'] = position
+                new_spaceStation.properties['position'] = position 
                 self.gameState['spaceStations'].append(new_spaceStation)
-            print("Planet and spacestation initialized")
+            # print("Planet and spacestation initialized")
             ############################################################################
             # Initialize transporter (Randomly choose start and end planet, and initialize transporter at start planet)
             start_planet = np.random.choice(self.gameState['planets'])
             self.gameState['transporter'] = Object('transporter', self.shaders[0], transporterProps)
             # self.gameState['transporter'].properties['position'] = start_planet.properties['position']
             self.gameState['transporter'].properties['position'] = np.array([0, 0, 0], dtype=np.float32)    
-            print("Transporter initialized")
+            # print("Transporter initialized")
             ############################################################################
             # Initialize Pirates (Spawn at random locations within world bounds)
             self.n_pirates = 20 # for example
@@ -58,7 +59,7 @@ class Game:
                 new_pirate = Object('pirate', self.shaders[0], pirateProps) 
                 new_pirate.properties['position'] = position
                 self.gameState['pirates'].append(new_pirate)
-            print("Pirate initialized")
+            # print("Pirate initialized")
 
             cube = Object('cube', self.shaders[0], cube_props)
             self.gameState['cube'] = cube
@@ -141,9 +142,12 @@ class Game:
             
             for i, shader in enumerate(self.shaders):
                self.camera.Update(shader)
+            self.camera.Update(self.edge_shader)
+
             # self.gameState["cube"].Draw()
 
             self.gameState["transporter"].Draw()
+            # self.gameState["transporter"].DrawEdges(self.edge_shader, self.camera.viewMatrix, self.camera.projectionMatrix)
             # print("Transporter drawn")
             # self.gameState["stars"].Draw()
             # self.gameState["arrow"].Draw()
@@ -155,12 +159,15 @@ class Game:
             #     laser.Draw()
             for planet in self.gameState["planets"]:
                 planet.Draw()
+                # planet.DrawEdges(self.edge_shader, self.camera.viewMatrix, self.camera.projectionMatrix)
             # print("Planets drawn")
             for spaceStation in self.gameState["spaceStations"]:
                 spaceStation.Draw()
+                # spaceStation.DrawEdges(self.edge_shader, self.camera.viewMatrix, self.camera.projectionMatrix)
             # print("Spacestations drawn")
             for pirate in self.gameState["pirates"]:
                 pirate.Draw()
+                # pirate.DrawEdges(self.edge_shader, self.camera.viewMatrix, self.camera.projectionMatrix)
             # print("Pirates drawn")
             ######################################################
 

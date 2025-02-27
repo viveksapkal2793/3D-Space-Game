@@ -120,6 +120,9 @@ class Camera:
         focalLengthLocation = glGetUniformLocation(shader.ID, "focalLength".encode('utf-8'))
         glUniform1f(focalLengthLocation, self.f)
 
+        self.viewMatrix = viewMatrix
+        self.projectionMatrix = projectionMatrix
+
 class Object:
     def __init__(self, objType, shader, properties):
         self.properties = copy.deepcopy(properties)
@@ -186,3 +189,27 @@ class Object:
 
         # Issue Draw call with primitive type
         glDrawElements(GL_TRIANGLES, self.ibo.count, GL_UNSIGNED_INT, None)
+
+    def DrawEdges(self, edge_shader, viewMatrix, projectionMatrix, f):
+        self.viewMatrix = viewMatrix
+        self.projectionMatrix = projectionMatrix
+        self.f = f
+        edge_shader.Use()
+        modelMatrixLocation = glGetUniformLocation(edge_shader.ID, "modelMatrix".encode('utf-8'))
+        glUniformMatrix4fv(modelMatrixLocation, 1, GL_TRUE, self.modelMatrix)
+        
+        viewMatrixLocation = glGetUniformLocation(edge_shader.ID, "viewMatrix".encode('utf-8'))
+        glUniformMatrix4fv(viewMatrixLocation, 1, GL_TRUE, self.viewMatrix)
+
+        projectionMatrixLocation = glGetUniformLocation(edge_shader.ID, "projectionMatrix".encode('utf-8'))
+        glUniformMatrix4fv(projectionMatrixLocation, 1, GL_TRUE, self.projectionMatrix)
+
+        focalLengthLocation = glGetUniformLocation(edge_shader.ID, "focalLength".encode('utf-8'))
+        glUniform1f(focalLengthLocation, self.f)
+
+        self.vao.Use()
+        self.ibo.Use()
+
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+        glDrawElements(GL_TRIANGLES, self.ibo.count, GL_UNSIGNED_INT, None)
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)      
