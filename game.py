@@ -10,10 +10,13 @@ class Game:
         self.height = height
         self.width = width
         self.screen = 0
+        self.transporter_speed = 0.0
+        self.max_speed = 10.0
+        self.acceleration = 0.1
 
     def InitScene(self):
         if self.screen == 1:
-            print("Initializing scene")
+            # print("Initializing scene")
             ############################################################################
             # Define world state
             self.camera = Camera(self.height, self.width)
@@ -43,13 +46,21 @@ class Game:
                 new_spaceStation = Object('spaceStation', self.shaders[0], spacestationProps)
                 new_spaceStation.properties['position'] = position 
                 self.gameState['spaceStations'].append(new_spaceStation)
+            
+            new_planet = Object('planet', self.shaders[0], planetProps)
+            new_planet.properties['position'] = np.array([0, -15, 0], dtype=np.float32)
+            self.gameState['planets'].append(new_planet)
+
+            new_spaceStation = Object('spaceStation', self.shaders[0], spacestationProps)
+            new_spaceStation.properties['position'] = np.array([0, -15, 10], dtype=np.float32)
+            self.gameState['spaceStations'].append(new_spaceStation)
             # print("Planet and spacestation initialized")
             ############################################################################
             # Initialize transporter (Randomly choose start and end planet, and initialize transporter at start planet)
             start_planet = np.random.choice(self.gameState['planets'])
             self.gameState['transporter'] = Object('transporter', self.shaders[0], transporterProps)
             # self.gameState['transporter'].properties['position'] = start_planet.properties['position']
-            self.gameState['transporter'].properties['position'] = np.array([0, 0, 0], dtype=np.float32)    
+            self.gameState['transporter'].properties['position'] = np.array([-1, -1, -1], dtype=np.float32)    
             # print("Transporter initialized")
             ############################################################################
             # Initialize Pirates (Spawn at random locations within world bounds)
@@ -104,11 +115,43 @@ class Game:
             # print(f'screen: {self.screen}')
             ############################################################################
             # Manage inputs 
-           
+            transporter = self.gameState['transporter']
+            rotation_speed = 0.05
+
+            if inputs["W"]:
+                transporter.properties['rotation'][0] -= rotation_speed  # Pitch down
+            if inputs["S"]:
+                transporter.properties['rotation'][0] += rotation_speed  # Pitch up
+            if inputs["A"]:
+                transporter.properties['rotation'][1] -= rotation_speed  # Yaw left
+            if inputs["D"]:
+                transporter.properties['rotation'][1] += rotation_speed  # Yaw right
+            if inputs["Q"]:
+                transporter.properties['rotation'][2] -= rotation_speed  # Roll left
+            if inputs["E"]:
+                transporter.properties['rotation'][2] += rotation_speed  # Roll right
+            if inputs["SPACE"]:
+                self.transporter_speed += self.acceleration  # Accelerate forward
+                if self.transporter_speed > self.max_speed:
+                    self.transporter_speed = self.max_speed
+
+            # Calculate forward direction
+            rotation_matrix = np.array([
+                [np.cos(transporter.properties['rotation'][1]) * np.cos(transporter.properties['rotation'][0]), 
+                 np.sin(transporter.properties['rotation'][2]) * np.sin(transporter.properties['rotation'][1]) * np.cos(transporter.properties['rotation'][0]) - np.cos(transporter.properties['rotation'][2]) * np.sin(transporter.properties['rotation'][0]), 
+                 np.cos(transporter.properties['rotation'][2]) * np.sin(transporter.properties['rotation'][1]) * np.cos(transporter.properties['rotation'][0]) + np.sin(transporter.properties['rotation'][2]) * np.sin(transporter.properties['rotation'][0])],
+                [np.cos(transporter.properties['rotation'][1]) * np.sin(transporter.properties['rotation'][0]), 
+                 np.sin(transporter.properties['rotation'][2]) * np.sin(transporter.properties['rotation'][1]) * np.sin(transporter.properties['rotation'][0]) + np.cos(transporter.properties['rotation'][2]) * np.cos(transporter.properties['rotation'][0]), 
+                 np.cos(transporter.properties['rotation'][2]) * np.sin(transporter.properties['rotation'][1]) * np.sin(transporter.properties['rotation'][0]) - np.sin(transporter.properties['rotation'][2]) * np.cos(transporter.properties['rotation'][0])],
+                [-np.sin(transporter.properties['rotation'][1]), 
+                 np.sin(transporter.properties['rotation'][2]) * np.cos(transporter.properties['rotation'][1]), 
+                 np.cos(transporter.properties['rotation'][2]) * np.cos(transporter.properties['rotation'][1])]
+            ], dtype=np.float32)
+            forward_direction = rotation_matrix @ np.array([0, 0, -1], dtype=np.float32)
 
             ############################################################################
             # Update transporter (Update velocity, position, and check for collisions)
-           
+            transporter.properties['position'] += forward_direction * self.transporter_speed * time["deltaTime"]
 
             ############################################################################
             # Update spacestations (Update velocity and position to revolve around respective planet)
@@ -128,10 +171,28 @@ class Game:
 
             ############################################################################
             # Update Camera (Check for view (3rd person or 1st person) and set position and LookAt accordingly)
-            
+            # transporter_position = self.gameState['transporter'].properties['position']
+            # transporter_rotation = self.gameState['transporter'].properties['rotation']
+
+            # # Calculate the camera position behind the transporter
+            # offset = np.array([5, 10, 5], dtype=np.float32)  # Adjust the offset as needed
+            # rotation_matrix = np.array([
+            #     [np.cos(transporter_rotation[1]) * np.cos(transporter_rotation[0]), 
+            #      np.sin(transporter_rotation[2]) * np.sin(transporter_rotation[1]) * np.cos(transporter_rotation[0]) - np.cos(transporter_rotation[2]) * np.sin(transporter_rotation[0]), 
+            #      np.cos(transporter_rotation[2]) * np.sin(transporter_rotation[1]) * np.cos(transporter_rotation[0]) + np.sin(transporter_rotation[2]) * np.sin(transporter_rotation[0])],
+            #     [np.cos(transporter_rotation[1]) * np.sin(transporter_rotation[0]), 
+            #      np.sin(transporter_rotation[2]) * np.sin(transporter_rotation[1]) * np.sin(transporter_rotation[0]) + np.cos(transporter_rotation[2]) * np.cos(transporter_rotation[0]), 
+            #      np.cos(transporter_rotation[2]) * np.sin(transporter_rotation[1]) * np.sin(transporter_rotation[0]) - np.sin(transporter_rotation[2]) * np.cos(transporter_rotation[0])],
+            #     [-np.sin(transporter_rotation[1]), 
+            #      np.sin(transporter_rotation[2]) * np.cos(transporter_rotation[1]), 
+            #      np.cos(transporter_rotation[2]) * np.cos(transporter_rotation[1])]
+            # ], dtype=np.float32)
+            # camera_offset = rotation_matrix @ offset
+
+            # self.camera.position = transporter_position + camera_offset
+            # self.camera.lookAt = transporter_position
 
             ############################################################################
-            pass
     
     def DrawScene(self):
         if self.screen == 1: 
