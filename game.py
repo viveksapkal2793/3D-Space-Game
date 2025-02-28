@@ -76,8 +76,8 @@ class Game:
             self.gameState['cube'] = cube
             ############################################################################
             # Initialize minimap arrow (Need to write orthographic projection shader for it)
-            self.camera.position = np.array([5,5,5], dtype=np.float32)
-            self.camera.lookAt = np.array([-1,-1,-1], dtype=np.float32)
+            self.camera.position = np.array([-15/1.5,-1,4/1.5], dtype=np.float32)
+            self.camera.lookAt = np.array([1,0,0], dtype=np.float32)
 
             self.gameState['cube'].properties["scale"] = np.array([0.5, 0.5, 0.5], dtype=np.float32)
 
