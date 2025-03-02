@@ -181,7 +181,26 @@ class Game:
             
             ############################################################################
             # Update Pirates (Write logic to update their velocity based on transporter position, and check for collision with laser or transporter)
-            
+            pirate_speed = 10.0  # Adjust as needed
+            for pirate in self.gameState['pirates']:
+                # Calculate direction vector from pirate to transporter
+                direction = transporter.properties['position'] - pirate.properties['position']
+                
+                # Normalize the direction vector (make it unit length)
+                distance = np.linalg.norm(direction)
+                if distance > 0:  # Avoid division by zero
+                    direction = direction / distance
+                
+                # Update pirate position
+                pirate.properties['position'] += direction * pirate_speed * time["deltaTime"]
+                
+                # Optional: Make pirates face the transporter by updating their rotation
+                # This assumes pirates should look at the transporter
+                if distance > 0:
+                    # Simple rotation to face the transporter
+                    pirate_forward = direction
+                    pirate.properties['rotation'][1] = np.arctan2(pirate_forward[0], pirate_forward[2])
+                    pirate.properties['rotation'][0] = np.arctan2(-pirate_forward[1], np.sqrt(pirate_forward[0]**2 + pirate_forward[2]**2))
 
             ############################################################################
             # Update Camera (Check for view (3rd person or 1st person) and set position and LookAt accordingly)
