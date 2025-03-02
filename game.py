@@ -2,7 +2,7 @@ import imgui
 import numpy as np
 from OpenGL.GL import *
 from utils.graphics import Object, Camera, Shader
-from assets.objects.objects import transporterProps, pirateProps, planetProps, laserProps, spacestationProps, cube_props, arrow_props
+from assets.objects.objects import transporterProps, pirateProps, planetProps, laserProps, spacestationProps, cube_props, arrow_props, crosshair_props
 from assets.shaders.shaders import standard_shader, edge_shader, hud_shader
 
 class Game:
@@ -14,6 +14,10 @@ class Game:
         self.transporter_speed = 0.0
         self.max_speed = 10.0
         self.acceleration = 0.1
+        self.view_mode = 1  # 1: 3rd person, 2: 1st person
+        self.lasers = []  # Store active lasers
+        self.laser_cooldown = 0.0  # Time until next laser can be fired
+        self.laser_cooldown_time = 0.3  # Cooldown period between shots
 
     def InitScene(self):
         if self.screen == 1:
@@ -31,8 +35,13 @@ class Game:
                 'spaceStations': [],
                 'cube': None,
                 'arrow': None,  
+                'lasers': [],
+                'crosshair': None
             } # Can define keys as 'transporter', 'pirates', etc. Their values being Object() or list of Object()
             ############################################################################
+
+            # Initialize crosshair
+            self.gameState['crosshair'] = Object('crosshair', self.hud_shader, crosshair_props)
 
             # Initialize minimap arrow
             self.gameState['arrow'] = Object('arrow', self.hud_shader, arrow_props)
@@ -127,24 +136,61 @@ class Game:
             ############################################################################
             # Manage inputs 
             transporter = self.gameState['transporter']
-            rotation_speed = 0.025
 
-            if inputs["W"]:
-                transporter.properties['rotation'][0] -= rotation_speed  # Pitch down
-            if inputs["S"]:
-                transporter.properties['rotation'][0] += rotation_speed  # Pitch up
-            if inputs["A"]:
-                transporter.properties['rotation'][1] -= rotation_speed  # Yaw left
-            if inputs["D"]:
-                transporter.properties['rotation'][1] += rotation_speed  # Yaw right
-            if inputs["Q"]:
-                transporter.properties['rotation'][2] -= rotation_speed  # Roll left
-            if inputs["E"]:
-                transporter.properties['rotation'][2] += rotation_speed  # Roll right
-            if inputs["SPACE"]:
-                self.transporter_speed += self.acceleration  # Accelerate forward
-                if self.transporter_speed > self.max_speed:
-                    self.transporter_speed = self.max_speed
+            # Handle view mode switching
+            if inputs["R_CLICK"]:
+                self.view_mode = 2  # 1st person view when right-click is held
+            else:
+                self.view_mode = 1  # 3rd person view by default
+            
+            # Update laser cooldown timer
+            if self.laser_cooldown > 0:
+                self.laser_cooldown -= time["deltaTime"]
+
+            # Handle input based on view mode
+            if self.view_mode == 1:  # 3rd person view: can maneuver transporter
+                rotation_speed = 0.025
+                if inputs["W"]:
+                    transporter.properties['rotation'][0] -= rotation_speed  # Pitch down
+                if inputs["S"]:
+                    transporter.properties['rotation'][0] += rotation_speed  # Pitch up
+                if inputs["A"]:
+                    transporter.properties['rotation'][1] -= rotation_speed  # Yaw left
+                if inputs["D"]:
+                    transporter.properties['rotation'][1] += rotation_speed  # Yaw right
+                if inputs["Q"]:
+                    transporter.properties['rotation'][2] -= rotation_speed  # Roll left
+                if inputs["E"]:
+                    transporter.properties['rotation'][2] += rotation_speed  # Roll right
+                if inputs["SPACE"]:
+                    self.transporter_speed += self.acceleration  # Accelerate forward
+                    if self.transporter_speed > self.max_speed:
+                        self.transporter_speed = self.max_speed
+
+            elif self.view_mode == 2:  # 1st person view: can shoot lasers
+                # Mouse movement can be used for aiming if needed
+                # mouseDelta = inputs["mouseDelta"]
+                
+                # Fire laser with left click if cooldown is over
+                if inputs["L_CLICK"] and self.laser_cooldown <= 0:
+                    # Create a new laser object
+                    new_laser = Object('laser', self.shaders[0], laserProps)
+                    # Position it at the transporter's position
+                    new_laser.properties['position'] = np.copy(transporter.properties['position'])
+                    # Use the same rotation as the transporter
+                    new_laser.properties['rotation'] = np.copy(transporter.properties['rotation'])
+                    # Adjust scale if needed
+                    new_laser.properties['scale'] = np.array([0.2, 0.2, 2.0], dtype=np.float32)
+                    # Calculate direction based on the forward direction
+                    forward_dir = self.camera.lookAt - self.camera.position
+                    # Store the direction for updating laser position
+                    new_laser.properties['direction'] = forward_dir
+                    # Store the creation time
+                    new_laser.properties['creation_time'] = time["currentTime"]
+                    # Add to game state
+                    self.gameState['lasers'].append(new_laser)
+                    # Set cooldown
+                    self.laser_cooldown = self.laser_cooldown_time
 
             # Calculate forward direction
             rotation_matrix = np.array([
@@ -226,7 +272,35 @@ class Game:
 
             ############################################################################
             # Update Lasers (Update position of any currently shot lasers, make sure to despawn them if they go too far to save computation)
-           
+            laser_speed = 50.0
+            max_laser_distance = 500.0
+            # Create a list to hold lasers that should be removed
+            lasers_to_remove = []
+            
+            for laser in self.gameState['lasers']:
+                # Move laser forward
+                laser.properties['position'] += laser.properties['direction'] * laser_speed * time["deltaTime"]
+                
+                # Check if laser has traveled too far
+                distance_traveled = np.linalg.norm(laser.properties['position'] - transporter.properties['position'])
+                if distance_traveled > max_laser_distance:
+                    lasers_to_remove.append(laser)
+                
+                # Check for collisions with pirates
+                for pirate in self.gameState['pirates']:
+                    laser_to_pirate = pirate.properties['position'] - laser.properties['position']
+                    distance = np.linalg.norm(laser_to_pirate)
+                    if distance < 3.0:  # Collision threshold
+                        if pirate in self.gameState['pirates']:  # Make sure pirate hasn't been removed yet
+                            # Remove the pirate
+                            self.gameState['pirates'].remove(pirate)
+                        lasers_to_remove.append(laser)
+                        break
+            
+            # Remove lasers that have traveled too far or hit pirates
+            for laser in lasers_to_remove:
+                if laser in self.gameState['lasers']:
+                    self.gameState['lasers'].remove(laser)
             
             ############################################################################
             # Update Pirates (Write logic to update their velocity based on transporter position, and check for collision with laser or transporter)
@@ -315,10 +389,15 @@ class Game:
             ], dtype=np.float32)
             camera_offset = rotation_matrix @ offset
 
-            # self.camera.position = transporter_position + camera_offset
-            self.camera.lookAt = forward_direction
-            self.camera.position = transporter_position - 10 * forward_direction + np.array([0, 0, 5], dtype=np.float32)
-
+            if self.view_mode == 1:  # 3rd person view
+                # self.camera.position = transporter_position + camera_offset
+                self.camera.lookAt = forward_direction
+                self.camera.position = transporter_position - 10 * forward_direction + np.array([0, 0, 5], dtype=np.float32)
+            else: # 1st person view
+                # Position camera at transporter position
+                self.camera.lookAt = forward_direction
+                # Look in the direction the transporter is facing
+                self.camera.position = transporter_position + forward_direction * 5 # + np.array([0, 0, 5], dtype=np.float32)
             ############################################################################
     
     def DrawScene(self):
@@ -358,6 +437,10 @@ class Game:
                 pirate.Draw()
                 # pirate.DrawEdges(self.edge_shader, self.camera.viewMatrix, self.camera.projectionMatrix)
             # print("Pirates drawn")
+
+            # Draw lasers
+            for laser in self.gameState['lasers']:
+                laser.Draw()
             ######################################################
 
             # Draw arrow in screen space using HUD shader
@@ -382,3 +465,22 @@ class Game:
             self.gameState["arrow"].ibo.Use()
             glDrawElements(GL_TRIANGLES, self.gameState["arrow"].ibo.count, GL_UNSIGNED_INT, None)
 
+            # Draw crosshair in 1st person view
+            if self.view_mode == 2:
+                self.gameState["crosshair"].shader.Use()
+                glUseProgram(self.gameState["crosshair"].shader.ID)
+                
+                # Set HUD shader uniforms
+                screenPosLoc = glGetUniformLocation(self.gameState["crosshair"].shader.ID, "screenPosition".encode('utf-8'))
+                rotationLoc = glGetUniformLocation(self.gameState["crosshair"].shader.ID, "rotation".encode('utf-8'))
+                colorLoc = glGetUniformLocation(self.gameState["crosshair"].shader.ID, "color".encode('utf-8'))
+                
+                # Position in center of screen
+                glUniform2f(screenPosLoc, 0.0, 0.0)
+                glUniform1f(rotationLoc, 0.0)
+                glUniform3f(colorLoc, 1.0, 1.0, 1.0)  # White crosshair
+                
+                # Draw the crosshair
+                self.gameState["crosshair"].vao.Use()
+                self.gameState["crosshair"].ibo.Use()
+                glDrawElements(GL_LINES, self.gameState["crosshair"].ibo.count, GL_UNSIGNED_INT, None)

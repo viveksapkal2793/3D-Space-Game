@@ -172,3 +172,24 @@ arrow_props = {
     'scale': np.array([1.0, 1.0, 1.0], dtype=np.float32),
     'colour': np.array([1.0, 0.0, 0.0, 1.0], dtype=np.float32)  # Red color
 }
+
+# Initialize crosshair for 1st person view
+crosshair_vertices = np.array([
+    # Horizontal line
+    -0.02, 0.0, 0.0,  1.0, 1.0, 1.0,
+    0.02, 0.0, 0.0,  1.0, 1.0, 1.0,
+    # Vertical line
+    0.0, -0.02, 0.0,  1.0, 1.0, 1.0,
+    0.0,  0.02, 0.0,  1.0, 1.0, 1.0,
+], dtype=np.float32)
+        
+crosshair_indices = np.array([0, 1, 2, 3], dtype=np.uint32)
+        
+crosshair_props = {
+    'vertices': crosshair_vertices,
+    'indices': crosshair_indices,
+    'position': np.array([0.0, 0.0, 0.0], dtype=np.float32),
+    'rotation': np.array([0.0, 0.0, 0.0], dtype=np.float32),
+    'scale': np.array([1.0, 1.0, 1.0], dtype=np.float32),
+    'colour': np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32)
+}
