@@ -36,10 +36,12 @@ class Game:
                 'cube': None,
                 'arrow': None,  
                 'lasers': [],
-                'crosshair': None
+                'crosshair': None,
+                'test': None
             } # Can define keys as 'transporter', 'pirates', etc. Their values being Object() or list of Object()
             ############################################################################
 
+            # self.gameState['test'] = Object('test', self.shaders[0], laserProps)
             # Initialize crosshair
             self.gameState['crosshair'] = Object('crosshair', self.hud_shader, crosshair_props)
 
@@ -92,14 +94,14 @@ class Game:
                 self.gameState['pirates'].append(new_pirate)
             # print("Pirate initialized")
 
-            cube = Object('cube', self.shaders[0], cube_props)
-            self.gameState['cube'] = cube
+            # cube = Object('cube', self.shaders[0], cube_props)
+            # self.gameState['cube'] = cube
             ############################################################################
             # Initialize minimap arrow (Need to write orthographic projection shader for it)
             self.camera.position = np.array([-15/1.5,-1,4/1.5], dtype=np.float32)
             self.camera.lookAt = np.array([1,0,0], dtype=np.float32)
 
-            self.gameState['cube'].properties["scale"] = np.array([0.5, 0.5, 0.5], dtype=np.float32)
+            # self.gameState['cube'].properties["scale"] = np.array([0.5, 0.5, 0.5], dtype=np.float32)
 
             ############################################################################
 
@@ -173,22 +175,27 @@ class Game:
                 
                 # Fire laser with left click if cooldown is over
                 if inputs["L_CLICK"] and self.laser_cooldown <= 0:
+                    forward_dir = self.camera.lookAt - self.camera.position
                     # Create a new laser object
                     new_laser = Object('laser', self.shaders[0], laserProps)
                     # Position it at the transporter's position
-                    new_laser.properties['position'] = np.copy(transporter.properties['position'])
+                    new_laser.properties['position'] =self.camera.position + 2*forward_dir
                     # Use the same rotation as the transporter
                     new_laser.properties['rotation'] = np.copy(transporter.properties['rotation'])
                     # Adjust scale if needed
-                    new_laser.properties['scale'] = np.array([0.2, 0.2, 2.0], dtype=np.float32)
+                    new_laser.properties['scale'] = np.array([1.0, 1.0, 1.0], dtype=np.float32)
                     # Calculate direction based on the forward direction
-                    forward_dir = self.camera.lookAt - self.camera.position
                     # Store the direction for updating laser position
                     new_laser.properties['direction'] = forward_dir
                     # Store the creation time
                     new_laser.properties['creation_time'] = time["currentTime"]
+                    new_laser.properties['colour'] = np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32)
                     # Add to game state
                     self.gameState['lasers'].append(new_laser)
+                    # Add after creating a new laser:
+                    # print(f"Laser created at position: {new_laser.properties['position']}")
+                    # print(f"Laser direction: {new_laser.properties['direction']}")
+                    # print(f"Total lasers: {len(self.gameState['lasers'])}")
                     # Set cooldown
                     self.laser_cooldown = self.laser_cooldown_time
 
@@ -272,15 +279,14 @@ class Game:
 
             ############################################################################
             # Update Lasers (Update position of any currently shot lasers, make sure to despawn them if they go too far to save computation)
-            laser_speed = 50.0
+            laser_speed = 5.0
             max_laser_distance = 500.0
             # Create a list to hold lasers that should be removed
             lasers_to_remove = []
-            
             for laser in self.gameState['lasers']:
                 # Move laser forward
-                laser.properties['position'] += laser.properties['direction'] * laser_speed * time["deltaTime"]
-                
+                laser.properties['position'] -= laser.properties['direction'] * laser_speed * time["deltaTime"]
+                # print(f"Laser position: {laser.properties['position']}")
                 # Check if laser has traveled too far
                 distance_traveled = np.linalg.norm(laser.properties['position'] - transporter.properties['position'])
                 if distance_traveled > max_laser_distance:
@@ -294,6 +300,7 @@ class Game:
                         if pirate in self.gameState['pirates']:  # Make sure pirate hasn't been removed yet
                             # Remove the pirate
                             self.gameState['pirates'].remove(pirate)
+                            # print(f"Pirate removed at position: {pirate.properties['position']}")
                         lasers_to_remove.append(laser)
                         break
             
@@ -301,6 +308,7 @@ class Game:
             for laser in lasers_to_remove:
                 if laser in self.gameState['lasers']:
                     self.gameState['lasers'].remove(laser)
+                    # print(f"Laser removed at position: {laser.properties['position']}")
             
             ############################################################################
             # Update Pirates (Write logic to update their velocity based on transporter position, and check for collision with laser or transporter)
@@ -413,7 +421,7 @@ class Game:
             # self.camera.Update(self.hud_shader)
 
             # self.gameState["cube"].Draw()
-
+            # self.gameState["test"].Draw()
             self.gameState["transporter"].Draw()
             # self.gameState["transporter"].DrawEdges(self.edge_shader, self.camera.viewMatrix, self.camera.projectionMatrix)
             # print("Transporter drawn")
@@ -441,6 +449,7 @@ class Game:
             # Draw lasers
             for laser in self.gameState['lasers']:
                 laser.Draw()
+                # print(f"Laser drawn at position: {laser.properties['position']}")
             ######################################################
 
             # Draw arrow in screen space using HUD shader
@@ -469,18 +478,18 @@ class Game:
             if self.view_mode == 2:
                 self.gameState["crosshair"].shader.Use()
                 glUseProgram(self.gameState["crosshair"].shader.ID)
-                
+                    
                 # Set HUD shader uniforms
-                screenPosLoc = glGetUniformLocation(self.gameState["crosshair"].shader.ID, "screenPosition".encode('utf-8'))
+                screenPosLoc = glGetUniformLocation(self.gameState["crosshair"].shader.ID, "screenPosition".encode('utf-8'))   
                 rotationLoc = glGetUniformLocation(self.gameState["crosshair"].shader.ID, "rotation".encode('utf-8'))
                 colorLoc = glGetUniformLocation(self.gameState["crosshair"].shader.ID, "color".encode('utf-8'))
-                
+                    
                 # Position in center of screen
                 glUniform2f(screenPosLoc, 0.0, 0.0)
                 glUniform1f(rotationLoc, 0.0)
                 glUniform3f(colorLoc, 1.0, 1.0, 1.0)  # White crosshair
-                
+                    
                 # Draw the crosshair
                 self.gameState["crosshair"].vao.Use()
                 self.gameState["crosshair"].ibo.Use()
-                glDrawElements(GL_LINES, self.gameState["crosshair"].ibo.count, GL_UNSIGNED_INT, None)
+                glDrawElements(GL_TRIANGLES, self.gameState["crosshair"].ibo.count, GL_UNSIGNED_INT, None)
