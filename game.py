@@ -44,7 +44,7 @@ class Game:
                 self.gameState['planets'].append(new_planet)
 
                 new_spaceStation = Object('spaceStation', self.shaders[0], spacestationProps)
-                new_spaceStation.properties['position'] = position 
+                new_spaceStation.properties['position'] = position + np.array([0, 0, 10], dtype=np.float32)
                 self.gameState['spaceStations'].append(new_spaceStation)
             
             new_planet = Object('planet', self.shaders[0], planetProps)
@@ -116,7 +116,7 @@ class Game:
             ############################################################################
             # Manage inputs 
             transporter = self.gameState['transporter']
-            rotation_speed = 0.05
+            rotation_speed = 0.025
 
             if inputs["W"]:
                 transporter.properties['rotation'][0] -= rotation_speed  # Pitch down
@@ -161,7 +161,15 @@ class Game:
 
             ############################################################################
             # Update spacestations (Update velocity and position to revolve around respective planet)
-            
+            for i, spaceStation in enumerate(self.gameState['spaceStations']):
+                planet = self.gameState['planets'][i % len(self.gameState['planets'])]
+                angle = time["currentTime"] * 0.5  # Adjust the speed of revolution as needed
+                radius = 10.0  # Adjust the radius of revolution as needed
+                spaceStation.properties['position'] = planet.properties['position'] + np.array([
+                    radius * np.cos(angle),
+                    radius * np.sin(angle),
+                    0
+                ], dtype=np.float32)
 
             ############################################################################
             # Update Minimap Arrow: (Set direction based on transporter velocity direction and target direction)
