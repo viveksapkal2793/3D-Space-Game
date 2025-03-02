@@ -83,8 +83,8 @@ hud_shader = {
         
         void main() {
             // Apply rotation
-            float cosAngle = cos(rotation);
-            float sinAngle = sin(rotation);
+            float cosAngle = cos(-rotation);
+            float sinAngle = sin(-rotation);
             vec2 rotatedPos = vec2(
                 vertexPosition.x * cosAngle - vertexPosition.y * sinAngle,
                 vertexPosition.x * sinAngle + vertexPosition.y * cosAngle
