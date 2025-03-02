@@ -193,17 +193,25 @@ class Game:
             # Calculate direction to destination
             destination_station = self.gameState['spaceStations'][self.destination_index]
             dir_to_destination = destination_station.properties['position'] - transporter.properties['position']
-            dir_to_destination_normalized = dir_to_destination / (np.linalg.norm(dir_to_destination) + 1e-6)
 
             # Calculate horizontal direction (XY plane)
             horizontal_dir = np.array([dir_to_destination[0], dir_to_destination[1], 0], dtype=np.float32)
-            horizontal_dir = horizontal_dir / (np.linalg.norm(horizontal_dir) + 1e-6)
+            horizontal_norm = np.linalg.norm(horizontal_dir)
 
-            # Calculate angle in the XY plane
-            angle = np.arctan2(horizontal_dir[1], horizontal_dir[0])
+            if horizontal_norm > 0.001:  # Avoid near-zero vectors
+                horizontal_dir = horizontal_dir / horizontal_norm
+                # Calculate angle in the XY plane - arctan2 returns angle in radians
+                angle = np.arctan2(horizontal_dir[1], horizontal_dir[0])
+                
+                # Add offset since our arrow points upward (positive Y) by default
+                # arctan2 returns angle from positive X axis, so add π/2 to rotate from +Y
+                self.gameState['arrow'].properties['rotation'][2] = angle + np.pi/2
+            else:
+                # Default angle if no clear direction
+                self.gameState['arrow'].properties['rotation'][2] = np.pi/2
 
-            # Set arrow rotation to point toward destination in the XY plane
-            self.gameState['arrow'].properties['rotation'][2] = angle
+            # Debug output
+            # print(f"Direction: ({horizontal_dir[0]:.2f}, {horizontal_dir[1]:.2f}), Angle: {self.gameState['arrow'].properties['rotation'][2]:.2f}")
 
             # Adjust color based on Z difference (red if above, blue if below)
             z_diff = dir_to_destination[2]
@@ -323,6 +331,7 @@ class Game:
             for i, shader in enumerate(self.shaders):
                self.camera.Update(shader)
             self.camera.Update(self.edge_shader)
+            # self.camera.Update(self.hud_shader)
 
             # self.gameState["cube"].Draw()
 
@@ -353,7 +362,8 @@ class Game:
 
             # Draw arrow in screen space using HUD shader
             self.gameState["arrow"].shader.Use()
-            
+            glUseProgram(self.gameState["arrow"].shader.ID)
+
             # Set HUD shader uniforms
             screenPosLoc = glGetUniformLocation(self.gameState["arrow"].shader.ID, "screenPosition".encode('utf-8'))
             rotationLoc = glGetUniformLocation(self.gameState["arrow"].shader.ID, "rotation".encode('utf-8'))
