@@ -68,6 +68,50 @@ edge_shader = {
 
 }
 
+# Add this to your shaders.py file
+hud_shader = {
+    "vertex_shader" : '''
+        #version 330 core
+        layout(location = 0) in vec3 vertexPosition;
+        layout(location = 1) in vec3 vertexColor;
+        
+        uniform vec2 screenPosition;
+        uniform float rotation;
+        uniform vec3 color;
+        
+        out vec3 fragColor;
+        
+        void main() {
+            // Apply rotation
+            float cosAngle = cos(rotation);
+            float sinAngle = sin(rotation);
+            vec2 rotatedPos = vec2(
+                vertexPosition.x * cosAngle - vertexPosition.y * sinAngle,
+                vertexPosition.x * sinAngle + vertexPosition.y * cosAngle
+            );
+            
+            // Scale and position the arrow in screen space
+            vec2 finalPos = screenPosition + rotatedPos * 0.1;
+            
+            // Keep Z at 0 for 2D
+            gl_Position = vec4(finalPos, 0.0, 1.0);
+            
+            // Pass color to fragment shader
+            fragColor = mix(vertexColor, color, 0.8);
+        }
+    ''',
+
+    "fragment_shader" : '''
+        #version 330 core
+        in vec3 fragColor;
+        out vec4 outputColour;
+        
+        void main() {
+            outputColour = vec4(fragColor, 1.0);
+        }
+    '''
+}
+
 # standard_shader = {
 #     "vertex_shader" : '''
         

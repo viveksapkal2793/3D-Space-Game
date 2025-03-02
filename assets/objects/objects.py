@@ -147,3 +147,28 @@ cube_props = {
     'scale': np.array([1.0, 1.0, 1.0], dtype=np.float32),
     'colour': np.array([1.0, 0.0, 0.0, 1.0], dtype=np.float32)  # Red color
 }
+
+# Define vertices and indices for a simple arrow shape
+arrow_vertices = np.array([
+    #   x,   y,   z,    r,   g,   b
+     0.0,  0.5,  0.0,  1.0, 0.0, 0.0,  # Tip (red)
+    -0.3, -0.5,  0.0,  1.0, 0.3, 0.0,  # Bottom left
+     0.3, -0.5,  0.0,  1.0, 0.3, 0.0,  # Bottom right
+     0.0,  0.2,  0.0,  1.0, 0.6, 0.0,  # Middle
+    -0.2, -0.2,  0.0,  1.0, 0.3, 0.0,  # Left middle
+     0.2, -0.2,  0.0,  1.0, 0.3, 0.0,  # Right middle
+], dtype=np.float32)
+
+arrow_indices = np.array([
+    0, 1, 2,  # Tip triangle
+    3, 4, 5   # Base quadrilateral
+], dtype=np.uint32)
+
+arrow_props = {
+    'vertices': arrow_vertices,
+    'indices': arrow_indices,
+    'position': np.array([0.0, 0.0, 0.0], dtype=np.float32),
+    'rotation': np.array([0.0, 0.0, 0.0], dtype=np.float32),
+    'scale': np.array([1.0, 1.0, 1.0], dtype=np.float32),
+    'colour': np.array([1.0, 0.0, 0.0, 1.0], dtype=np.float32)  # Red color
+}

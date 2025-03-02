@@ -1,8 +1,9 @@
 import imgui
 import numpy as np
+from OpenGL.GL import *
 from utils.graphics import Object, Camera, Shader
-from assets.objects.objects import transporterProps, pirateProps, planetProps, laserProps, spacestationProps, cube_props
-from assets.shaders.shaders import standard_shader, edge_shader
+from assets.objects.objects import transporterProps, pirateProps, planetProps, laserProps, spacestationProps, cube_props, arrow_props
+from assets.shaders.shaders import standard_shader, edge_shader, hud_shader
 
 class Game:
     def __init__(self, height, width, gui):
@@ -22,14 +23,21 @@ class Game:
             self.camera = Camera(self.height, self.width)
             self.shaders = [Shader(standard_shader["vertex_shader"], standard_shader["fragment_shader"])]
             self.edge_shader = Shader(edge_shader["vertex_shader"], edge_shader["fragment_shader"])
+            self.hud_shader = Shader(hud_shader["vertex_shader"], hud_shader["fragment_shader"])
             self.gameState = {
                 'transporter': None,
                 'pirates': [],
                 'planets': [],
                 'spaceStations': [],
-                'cube': None
+                'cube': None,
+                'arrow': None,  
             } # Can define keys as 'transporter', 'pirates', etc. Their values being Object() or list of Object()
             ############################################################################
+
+            # Initialize minimap arrow
+            self.gameState['arrow'] = Object('arrow', self.hud_shader, arrow_props)
+            self.gameState['arrow'].properties['scale'] = np.array([1.0, 1.0, 1.0], dtype=np.float32)
+
             # Define world boundarie
             self.worldMin = np.array([-500, -500, -500], dtype=np.float32)
             self.worldMax = np.array([500, 500, 500], dtype=np.float32)
@@ -182,7 +190,31 @@ class Game:
 
             ############################################################################
             # Update Minimap Arrow: (Set direction based on transporter velocity direction and target direction)
-            
+            # Calculate direction to destination
+            destination_station = self.gameState['spaceStations'][self.destination_index]
+            dir_to_destination = destination_station.properties['position'] - transporter.properties['position']
+            dir_to_destination_normalized = dir_to_destination / (np.linalg.norm(dir_to_destination) + 1e-6)
+
+            # Calculate horizontal direction (XY plane)
+            horizontal_dir = np.array([dir_to_destination[0], dir_to_destination[1], 0], dtype=np.float32)
+            horizontal_dir = horizontal_dir / (np.linalg.norm(horizontal_dir) + 1e-6)
+
+            # Calculate angle in the XY plane
+            angle = np.arctan2(horizontal_dir[1], horizontal_dir[0])
+
+            # Set arrow rotation to point toward destination in the XY plane
+            self.gameState['arrow'].properties['rotation'][2] = angle
+
+            # Adjust color based on Z difference (red if above, blue if below)
+            z_diff = dir_to_destination[2]
+            if z_diff > 0:  # Destination is above
+                red = min(1.0, 0.5 + abs(z_diff) * 0.005)
+                blue = max(0.0, 1.0 - abs(z_diff) * 0.005)
+                self.gameState['arrow'].properties['colour'] = np.array([red, 0.2, blue, 1.0], dtype=np.float32)
+            else:  # Destination is below
+                red = max(0.0, 1.0 - abs(z_diff) * 0.005)
+                blue = min(1.0, 0.5 + abs(z_diff) * 0.005)
+                self.gameState['arrow'].properties['colour'] = np.array([red, 0.2, blue, 1.0], dtype=np.float32)
 
             ############################################################################
             # Update Lasers (Update position of any currently shot lasers, make sure to despawn them if they go too far to save computation)
@@ -318,4 +350,25 @@ class Game:
                 # pirate.DrawEdges(self.edge_shader, self.camera.viewMatrix, self.camera.projectionMatrix)
             # print("Pirates drawn")
             ######################################################
+
+            # Draw arrow in screen space using HUD shader
+            self.gameState["arrow"].shader.Use()
+            
+            # Set HUD shader uniforms
+            screenPosLoc = glGetUniformLocation(self.gameState["arrow"].shader.ID, "screenPosition".encode('utf-8'))
+            rotationLoc = glGetUniformLocation(self.gameState["arrow"].shader.ID, "rotation".encode('utf-8'))
+            colorLoc = glGetUniformLocation(self.gameState["arrow"].shader.ID, "color".encode('utf-8'))
+            
+            # Position in bottom-right corner
+            glUniform2f(screenPosLoc, 0.8, -0.8)
+            glUniform1f(rotationLoc, self.gameState["arrow"].properties['rotation'][2])
+            glUniform3f(colorLoc, 
+                    self.gameState["arrow"].properties['colour'][0],
+                    self.gameState["arrow"].properties['colour'][1],
+                    self.gameState["arrow"].properties['colour'][2])
+            
+            # Draw the arrow
+            self.gameState["arrow"].vao.Use()
+            self.gameState["arrow"].ibo.Use()
+            glDrawElements(GL_TRIANGLES, self.gameState["arrow"].ibo.count, GL_UNSIGNED_INT, None)
 
