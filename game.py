@@ -181,30 +181,11 @@ class Game:
             
             ############################################################################
             # Update Pirates (Write logic to update their velocity based on transporter position, and check for collision with laser or transporter)
-            pirate_speed = 10.0  # Adjust as needed
+            pirate_speed = 5.0  # Adjust as needed
             collision_distance_transporter = 3.0  # Collision distance for transporter
             collision_distance_objects = 5.0  # Collision distance for other objects
             
             for pirate in self.gameState['pirates']:
-                # Calculate direction vector from pirate to transporter
-                direction = transporter.properties['position'] - pirate.properties['position']
-                
-                # Normalize the direction vector (make it unit length)
-                distance = np.linalg.norm(direction)
-                if distance > 0:  # Avoid division by zero
-                    direction = direction / distance
-                
-                # Update pirate position
-                pirate.properties['position'] += direction * pirate_speed * time["deltaTime"]
-                
-                # Optional: Make pirates face the transporter by updating their rotation
-                # This assumes pirates should look at the transporter
-                if distance > 0:
-                    # Simple rotation to face the transporter
-                    pirate_forward = direction
-                    pirate.properties['rotation'][1] = np.arctan2(pirate_forward[0], pirate_forward[2])
-                    pirate.properties['rotation'][0] = np.arctan2(-pirate_forward[1], np.sqrt(pirate_forward[0]**2 + pirate_forward[2]**2))
-
                 # Calculate direction vector from pirate to transporter
                 direction_to_transporter = transporter.properties['position'] - pirate.properties['position']
                 
@@ -216,6 +197,54 @@ class Game:
                     # Collision detected - Game Over!
                     self.screen = 3  # Set to game over screen
                     break
+                    
+                if distance_to_transporter > 0:  # Avoid division by zero
+                    direction_to_transporter = direction_to_transporter / distance_to_transporter
+                    
+                # Initialize avoidance force
+                avoidance_force = np.zeros(3, dtype=np.float32)
+                
+                # Avoid other pirates
+                for other_pirate in self.gameState['pirates']:
+                    if other_pirate != pirate:
+                        dir_to_other = pirate.properties['position'] - other_pirate.properties['position']
+                        dist_to_other = np.linalg.norm(dir_to_other)
+                        if dist_to_other < collision_distance_objects and dist_to_other > 0:
+                            avoidance_force += dir_to_other / (dist_to_other * dist_to_other) * 10.0
+                
+                # Avoid planets
+                for planet in self.gameState['planets']:
+                    dir_to_planet = pirate.properties['position'] - planet.properties['position']
+                    dist_to_planet = np.linalg.norm(dir_to_planet)
+                    if dist_to_planet < collision_distance_objects * 3 and dist_to_planet > 0:
+                        avoidance_force += dir_to_planet / (dist_to_planet * dist_to_planet) * 20.0
+                        
+                # Avoid spacestations
+                for station in self.gameState['spaceStations']:
+                    dir_to_station = pirate.properties['position'] - station.properties['position']
+                    dist_to_station = np.linalg.norm(dir_to_station)
+                    if dist_to_station < collision_distance_objects and dist_to_station > 0:
+                        avoidance_force += dir_to_station / (dist_to_station * dist_to_station) * 15.0
+                        
+                # Normalize avoidance force if it's not zero
+                if np.linalg.norm(avoidance_force) > 0:
+                    avoidance_force = avoidance_force / np.linalg.norm(avoidance_force)
+                    
+                # Combine pursuit and avoidance (70% pursuit, 30% avoidance)
+                combined_direction = 0.7 * direction_to_transporter + 0.3 * avoidance_force
+                if np.linalg.norm(combined_direction) > 0:
+                    combined_direction = combined_direction / np.linalg.norm(combined_direction)
+                    
+                # Update pirate position
+                pirate.properties['position'] += combined_direction * pirate_speed * time["deltaTime"]
+                
+                # Make pirates face the direction they're moving
+                if np.linalg.norm(combined_direction) > 0:
+                    # Simple rotation to face the movement direction
+                    pirate_forward = combined_direction
+                    pirate.properties['rotation'][1] = np.arctan2(pirate_forward[0], pirate_forward[2])
+                    pirate.properties['rotation'][0] = np.arctan2(-pirate_forward[1], np.sqrt(pirate_forward[0]**2 + pirate_forward[2]**2))
+
 
             ############################################################################
             # Update Camera (Check for view (3rd person or 1st person) and set position and LookAt accordingly)
