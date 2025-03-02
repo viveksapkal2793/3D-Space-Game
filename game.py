@@ -54,6 +54,9 @@ class Game:
             new_spaceStation = Object('spaceStation', self.shaders[0], spacestationProps)
             new_spaceStation.properties['position'] = np.array([0, -15, 10], dtype=np.float32)
             self.gameState['spaceStations'].append(new_spaceStation)
+
+            self.destination_index = np.random.randint(0, len(self.gameState['spaceStations']))
+            self.gameState['spaceStations'][self.destination_index].properties['colour'] = np.array([1.0, 0.8, 0.2, 1.0], dtype=np.float32)  # Make it golden
             # print("Planet and spacestation initialized")
             ############################################################################
             # Initialize transporter (Randomly choose start and end planet, and initialize transporter at start planet)
@@ -158,6 +161,12 @@ class Game:
             ############################################################################
             # Update transporter (Update velocity, position, and check for collisions)
             transporter.properties['position'] += forward_direction * self.transporter_speed * time["deltaTime"]
+
+            # Check collision with destination spacestation
+            destination_station = self.gameState['spaceStations'][self.destination_index]
+            dist_to_destination = np.linalg.norm(transporter.properties['position'] - destination_station.properties['position'])
+            if dist_to_destination < 5.0:  # Collision threshold
+                self.screen = 2  # YOU WON screen
 
             ############################################################################
             # Update spacestations (Update velocity and position to revolve around respective planet)
