@@ -95,7 +95,7 @@ planetProps = {
 laserProps = {
     'vertices': laserVerts,
     'indices': laserInds,
-    'position': np.array([0.0, 0.0, 0.0], dtype=np.float32),
+    'position': np.array([2.0, 2.0, 2.0], dtype=np.float32),
     'rotation': np.array([0.0, 0.0, 0.0], dtype=np.float32),
     'scale': np.array([1.0, 1.0, 1.0], dtype=np.float32),
     'colour': np.array([1.0, 1.0, 0.0, 1.0], dtype=np.float32)
@@ -176,14 +176,22 @@ arrow_props = {
 # Initialize crosshair for 1st person view
 crosshair_vertices = np.array([
     # Horizontal line
-    -0.02, 0.0, 0.0,  1.0, 1.0, 1.0,
-    0.02, 0.0, 0.0,  1.0, 1.0, 1.0,
-    # Vertical line
-    0.0, -0.02, 0.0,  1.0, 1.0, 1.0,
-    0.0,  0.02, 0.0,  1.0, 1.0, 1.0,
+    -0.25, 0.02, 0.0, 1.0, 1.0, 1.0,  # Top left
+    -0.25, -0.02, 0.0, 1.0, 1.0, 1.0,  # Bottom left
+    0.25, -0.02, 0.0, 1.0, 1.0, 1.0,  # Bottom right
+    0.25, 0.02, 0.0, 1.0, 1.0, 1.0,  # Top right
+     
+    # Vertical line 
+    -0.02, 0.25, 0.0, 1.0, 1.0, 1.0,  # Top left
+    -0.02, -0.25, 0.0, 1.0, 1.0, 1.0,  # Bottom left
+    0.02, -0.25, 0.0, 1.0, 1.0, 1.0,  # Bottom right
+    0.02, 0.25, 0.0, 1.0, 1.0, 1.0,  # Top right
 ], dtype=np.float32)
-        
-crosshair_indices = np.array([0, 1, 2, 3], dtype=np.uint32)
+
+crosshair_indices = np.array([
+    0, 1, 2, 0, 2, 3,  # Horizontal line
+    4, 5, 6, 4, 6, 7  # Vertical line
+], dtype=np.uint32)
         
 crosshair_props = {
     'vertices': crosshair_vertices,
@@ -193,3 +201,62 @@ crosshair_props = {
     'scale': np.array([1.0, 1.0, 1.0], dtype=np.float32),
     'colour': np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32)
 }
+
+
+# laser_vertices = np.array([
+#     # Position (XYZ)        # Color (RGB)
+#     # Front face (circle)
+#     0.0, 0.0, 1.0,          1.0, 0.2, 0.2,  # Center
+#     10.5, 0.0, 1.0,          1.0, 0.2, 0.2,  # Point 1
+#     10.35, 10.35, 1.0,        1.0, 0.2, 0.2,  # Point 2
+#     0.0, 10.5, 1.0,          1.0, 0.2, 0.2,  # Point 3
+#     -10.35, 10.35, 1.0,       1.0, 0.2, 0.2,  # Point 4
+#     -10.5, 0.0, 1.0,         1.0, 0.2, 0.2,  # Point 5
+#     -10.35, -10.35, 1.0,      1.0, 0.2, 0.2,  # Point 6
+#     0.0, -10.5, 1.0,         1.0, 0.2, 0.2,  # Point 7
+#     10.35, -10.35, 1.0,       1.0, 0.2, 0.2,  # Point 8
+    
+#     # Back face (circle)
+#     0.0, 0.0, -1.0,         1.0, 0.0, 0.0,  # Center
+#     10.5, 0.0, -1.0,         1.0, 0.0, 0.0,  # Point 1
+#     10.35, 10.35, -1.0,       1.0, 0.0, 0.0,  # Point 2
+#     0.0, 10.5, -1.0,         1.0, 0.0, 0.0,  # Point 3
+#     -10.35, 10.35, -1.0,      1.0, 0.0, 0.0,  # Point 4
+#     -10.5, 0.0, -1.0,        1.0, 0.0, 0.0,  # Point 5
+#     -10.35, -10.35, -1.0,     1.0, 0.0, 0.0,  # Point 6
+#     0.0, -10.5, -1.0,        1.0, 0.0, 0.0,  # Point 7
+#     10.35, -10.35, -1.0,      1.0, 0.0, 0.0,  # Point 8
+# ], dtype=np.float32)
+
+# # Create indices for a cylindrical laser beam
+# laser_indices = np.array([
+#     # Front face triangles
+#     0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5, 0, 5, 6, 0, 6, 7, 0, 7, 8, 0, 8, 1,
+#     # Back face triangles
+#     9, 11, 10, 9, 12, 11, 9, 13, 12, 9, 14, 13, 9, 15, 14, 9, 16, 15, 9, 17, 16, 9, 10, 17,
+#     # Side quad 1
+#     1, 10, 11, 1, 11, 2,
+#     # Side quad 2
+#     2, 11, 12, 2, 12, 3,
+#     # Side quad 3
+#     3, 12, 13, 3, 13, 4,
+#     # Side quad 4
+#     4, 13, 14, 4, 14, 5,
+#     # Side quad 5
+#     5, 14, 15, 5, 15, 6,
+#     # Side quad 6
+#     6, 15, 16, 6, 16, 7,
+#     # Side quad 7
+#     7, 16, 17, 7, 17, 8,
+#     # Side quad 8
+#     8, 17, 10, 8, 10, 1
+# ], dtype=np.uint32)
+
+# laserProps = {
+#     'vertices': laser_vertices,
+#     'indices': laser_indices,
+#     'position': np.array([0.0, 0.0, 0.0], dtype=np.float32),
+#     'rotation': np.array([0.0, 0.0, 0.0], dtype=np.float32),
+#     'scale': np.array([0.5, 0.5, 4.0], dtype=np.float32),  # Make it longer and thinner
+#     'colour': np.array([1.0, 0.2, 0.0, 1.0], dtype=np.float32)  # Bright orange-red
+# }
