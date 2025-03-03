@@ -153,21 +153,25 @@ class Game:
             if self.view_mode == 1:  # 3rd person view: can maneuver transporter
                 rotation_speed = 0.025
                 if inputs["W"]:
-                    transporter.properties['rotation'][0] -= rotation_speed  # Pitch down
+                    transporter.properties['rotation'][1] += rotation_speed  # Pitch Down
                 if inputs["S"]:
-                    transporter.properties['rotation'][0] += rotation_speed  # Pitch up
+                    transporter.properties['rotation'][1] -= rotation_speed  # Pitch Up
                 if inputs["A"]:
-                    transporter.properties['rotation'][1] -= rotation_speed  # Yaw left
+                    transporter.properties['rotation'][2] += rotation_speed  # Yaw right
                 if inputs["D"]:
-                    transporter.properties['rotation'][1] += rotation_speed  # Yaw right
+                    transporter.properties['rotation'][2] -= rotation_speed  # Yaw left
                 if inputs["Q"]:
-                    transporter.properties['rotation'][2] -= rotation_speed  # Roll left
+                    transporter.properties['rotation'][0] -= rotation_speed  # roll left
                 if inputs["E"]:
-                    transporter.properties['rotation'][2] += rotation_speed  # Roll right
+                    transporter.properties['rotation'][0] += rotation_speed  # roll right   
                 if inputs["SPACE"]:
                     self.transporter_speed += self.acceleration  # Accelerate forward
                     if self.transporter_speed > self.max_speed:
                         self.transporter_speed = self.max_speed
+                if inputs["L_SHIFT"]:
+                    self.transporter_speed -= self.acceleration  # Decelerate
+                    if self.transporter_speed < 0:
+                        self.transporter_speed = 0
 
             elif self.view_mode == 2:  # 1st person view: can shoot lasers
                 # Mouse movement can be used for aiming if needed
