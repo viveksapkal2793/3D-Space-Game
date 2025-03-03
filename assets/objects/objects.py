@@ -71,7 +71,7 @@ transporterProps = {
     'position': np.array([0.0, 0.0, 0.0], dtype=np.float32),
     'rotation': np.array([0.0, 0.0, 0.0], dtype=np.float32),
     'scale': np.array([1.0, 1.0, 1.0], dtype=np.float32),
-    'colour': np.array([0.0, 0.0, 1.0, 1.0], dtype=np.float32)
+    'colour': np.array([0.9, 0.9, 1.0, 1.0], dtype=np.float32)
 }
 
 pirateProps = {
@@ -80,7 +80,7 @@ pirateProps = {
     'position': np.array([0.0, 0.0, 0.0], dtype=np.float32),
     'rotation': np.array([0.0, 0.0, 0.0], dtype=np.float32),
     'scale': np.array([1.0, 1.0, 1.0], dtype=np.float32),
-    'colour': np.array([0.0, 1.0, 0.0, 1.0], dtype=np.float32)
+    'colour': np.array([0.0, 0.9, 0.5, 1.0], dtype=np.float32)
 }
 
 planetProps = {
@@ -98,7 +98,7 @@ laserProps = {
     'position': np.array([2.0, 2.0, 2.0], dtype=np.float32),
     'rotation': np.array([0.0, 0.0, 0.0], dtype=np.float32),
     'scale': np.array([1.0, 1.0, 1.0], dtype=np.float32),
-    'colour': np.array([1.0, 1.0, 0.0, 1.0], dtype=np.float32)
+    'colour': np.array([1.0, 0.0, 0.0, 1.0], dtype=np.float32)
 }
 
 spacestationProps = {

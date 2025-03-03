@@ -193,7 +193,6 @@ class Game:
                     new_laser.properties['direction'] = forward_dir
                     # Store the creation time
                     new_laser.properties['creation_time'] = time["currentTime"]
-                    new_laser.properties['colour'] = np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32)
                     # Add to game state
                     self.gameState['lasers'].append(new_laser)
                     # Add after creating a new laser:
@@ -283,7 +282,7 @@ class Game:
 
             ############################################################################
             # Update Lasers (Update position of any currently shot lasers, make sure to despawn them if they go too far to save computation)
-            laser_speed = 5.0
+            laser_speed = 15.0
             max_laser_distance = 500.0
             # Create a list to hold lasers that should be removed
             lasers_to_remove = []
