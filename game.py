@@ -60,6 +60,17 @@ class Game:
                 position = np.random.uniform(self.worldMin, self.worldMax)
                 new_planet = Object('planet', self.shaders[0], planetProps)
                 new_planet.properties['position'] = position
+                # Generate a random color for the planet
+                # Keep alpha = 1.0 for full opacity
+                # Generate vibrant colors by using the 0.3-0.9 range instead of 0.0-1.0
+                random_color = np.array([
+                    np.random.uniform(0.3, 0.9),  # Red
+                    np.random.uniform(0.3, 0.9),  # Green
+                    np.random.uniform(0.3, 0.9),  # Blue
+                    1.0                          # Alpha
+                ], dtype=np.float32)
+                
+                new_planet.properties['colour'] = random_color
                 self.gameState['planets'].append(new_planet)
 
                 new_spaceStation = Object('spaceStation', self.shaders[0], spacestationProps)
